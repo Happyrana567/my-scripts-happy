@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+THRESHOLD=80
+EMAIL="your@email.com"
+
+DISK_USAGE=$(df --output=pcent / | tail -1 | tr -dc '0-9')
+
+echo "Disk Usage: ${DISK_USAGE}%"
+
+if [ "$DISK_USAGE" -gt "$THRESHOLD" ]; then
+    echo "Cleaning disk..."
+
+    sudo apt autoremove -y
+    sudo find /tmp -type f -mtime +1 -delete
+    sudo journalctl --vacuum-time=7d
+
+    NEW_USAGE=$(df --output=pcent / | tail -1)
+
+    echo "Disk cleaned: $NEW_USAGE" \
+    | mail -s "Disk Cleanup Performed $(hostname)" "$EMAIL"
+else
+    echo "Disk OK"
+fi
